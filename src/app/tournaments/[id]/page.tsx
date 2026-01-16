@@ -49,16 +49,22 @@ export default async function TournamentDetailPage({
     .select("*")
     .order("name");
 
-  const { data: entryData } = await supabase
+  const { data: entryRows } = await supabase
     .from("tournament_entries")
-    .select("team_id, teams ( id, name, country )")
+    .select("team_id")
     .eq("tournament_id", tournamentId);
 
-  const entryTeams = (entryData ?? [])
-    .map((row) => (row as { teams: Team | null }).teams)
-    .filter((team): team is Team => Boolean(team));
+  const entryTeamIds = new Set((entryRows ?? []).map((row) => row.team_id));
 
-  const entryTeamIds = new Set(entryTeams.map((team) => team.id));
+  const entryTeams = entryTeamIds.size
+    ? ((
+        await supabase
+          .from("teams")
+          .select("*")
+          .in("id", Array.from(entryTeamIds))
+          .order("name")
+      ).data ?? []) as Team[]
+    : [];
   const availableTeams = (allTeams ?? []).filter(
     (team) => !entryTeamIds.has(team.id),
   ) as Team[];

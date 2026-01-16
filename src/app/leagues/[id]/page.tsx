@@ -54,16 +54,24 @@ export default async function LeagueDetailPage({
     .select("*")
     .order("name");
 
-  const { data: leagueTeamsData } = await supabase
+  const { data: leagueTeamRows } = await supabase
     .from("league_teams")
-    .select("team_id, teams ( id, name, country, stadium_name, stadium_city )")
+    .select("team_id")
     .eq("league_id", leagueId);
 
-  const teamsInLeague = (leagueTeamsData ?? [])
-    .map((row) => (row as { teams: Team | null }).teams)
-    .filter((team): team is Team => Boolean(team));
+  const leagueTeamIds = new Set(
+    (leagueTeamRows ?? []).map((row) => row.team_id),
+  );
 
-  const leagueTeamIds = new Set(teamsInLeague.map((team) => team.id));
+  const teamsInLeague = leagueTeamIds.size
+    ? ((
+        await supabase
+          .from("teams")
+          .select("*")
+          .in("id", Array.from(leagueTeamIds))
+          .order("name")
+      ).data ?? []) as Team[]
+    : [];
   const availableTeams = (allTeams ?? []).filter(
     (team) => !leagueTeamIds.has(team.id),
   ) as Team[];
