@@ -112,12 +112,20 @@ export async function generateNextRound(
   } else {
     const { data: roundMatches } = await supabase
       .from("tournament_round_matches")
-      .select("match_id, matches (*)")
+      .select("match_id")
       .eq("round_id", lastRound.id);
 
-    const matches = (roundMatches ?? [])
-      .map((row) => (row as { matches: Match | null }).matches)
-      .filter((match): match is Match => Boolean(match));
+    const matchIds = (roundMatches ?? []).map((row) => row.match_id);
+    if (matchIds.length === 0) {
+      return { ok: false, message: "このラウンドに試合がありません。" };
+    }
+
+    const { data: matchesData } = await supabase
+      .from("matches")
+      .select("*")
+      .in("id", matchIds);
+
+    const matches = (matchesData ?? []) as Match[];
 
     const unresolved = matches.some((match) => getMatchWinnerId(match) === null);
     if (unresolved) {
