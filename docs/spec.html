@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FOLD | サッカーリーグ&トーナメント管理 設計ドック</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5efe6;
+        --bg-deep: #e4efe7;
+        --ink: #14211d;
+        --muted: #4c615d;
+        --card: rgba(255, 255, 255, 0.75);
+        --card-strong: rgba(255, 255, 255, 0.92);
+        --accent: #f05d3b;
+        --accent-2: #188a7a;
+        --accent-3: #f2b544;
+        --stroke: rgba(20, 33, 29, 0.14);
+        --shadow: 0 24px 60px rgba(20, 33, 29, 0.12);
+        --radius: 22px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans JP", "Space Grotesk", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(700px 520px at 10% -10%, #f8d8b6 0%, transparent 60%),
+          radial-gradient(680px 460px at 94% -5%, #bfeedd 0%, transparent 55%),
+          linear-gradient(135deg, var(--bg) 0%, var(--bg-deep) 60%, var(--bg) 100%);
+        min-height: 100vh;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: radial-gradient(rgba(20, 33, 29, 0.08) 1px, transparent 1px);
+        background-size: 26px 26px;
+        opacity: 0.45;
+        pointer-events: none;
+      }
+
+      .page {
+        position: relative;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 64px 24px 90px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 32px;
+        align-items: center;
+        margin-bottom: 48px;
+      }
+
+      .eyebrow {
+        font-size: 0.9rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        font-family: "Space Grotesk", sans-serif;
+        color: var(--accent-2);
+      }
+
+      h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(2.4rem, 5vw, 3.6rem);
+        line-height: 1.1;
+        margin: 14px 0 18px;
+      }
+
+      h1 span {
+        color: var(--accent);
+      }
+
+      p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(20, 33, 29, 0.18);
+        background: rgba(255, 255, 255, 0.8);
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 0.85rem;
+      }
+
+      .hero-panel {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 24px;
+        border: 1px solid var(--stroke);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .hero-panel h2 {
+        margin: 0 0 12px;
+        font-size: 1.2rem;
+        font-family: "Space Grotesk", sans-serif;
+      }
+
+      .hero-panel ul {
+        padding-left: 18px;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .grid {
+        display: grid;
+        gap: 22px;
+      }
+
+      .card {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 26px;
+        border: 1px solid var(--stroke);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .card h3 {
+        margin: 0 0 14px;
+        font-size: 1.25rem;
+        font-family: "Space Grotesk", sans-serif;
+      }
+
+      .split {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .split h4 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+        color: var(--accent-2);
+        font-family: "Space Grotesk", sans-serif;
+      }
+
+      .split ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .entity-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .entity {
+        background: var(--card-strong);
+        border-radius: 18px;
+        padding: 16px;
+        border: 1px solid var(--stroke);
+      }
+
+      .entity h4 {
+        margin: 0 0 10px;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1rem;
+      }
+
+      .entity ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 10px;
+        border-radius: 999px;
+        background: rgba(24, 138, 122, 0.12);
+        border: 1px solid rgba(24, 138, 122, 0.2);
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 0.75rem;
+        color: var(--accent-2);
+      }
+
+      .callout {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .callout .block {
+        padding: 16px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid var(--stroke);
+      }
+
+      .callout .block h4 {
+        margin: 0 0 8px;
+        font-size: 0.98rem;
+        font-family: "Space Grotesk", sans-serif;
+      }
+
+      pre {
+        margin: 0;
+        background: #0f1b18;
+        color: #f8f2e7;
+        padding: 18px;
+        border-radius: 16px;
+        overflow-x: auto;
+        line-height: 1.6;
+        font-size: 0.9rem;
+      }
+
+      .prompt {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .list-inline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(240, 93, 59, 0.25);
+        background: rgba(240, 93, 59, 0.1);
+        font-size: 0.82rem;
+        font-family: "Space Grotesk", sans-serif;
+      }
+
+      .footer {
+        margin-top: 26px;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          padding: 48px 18px 70px;
+        }
+
+        .hero-panel {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <div class="eyebrow">FOLD / Football Ops Spec</div>
+          <h1>リーグ順位表とトーナメントを<span>最短で動くMVPへ</span></h1>
+          <p>
+            Vercelで公開できるWebアプリ前提で、MVPから拡張までを一枚に集約した設計ドック。
+            仕様・データ設計・画面・勝ち点ルールをまとめ、すぐ実装へ移れる形にしています。
+          </p>
+          <div class="chip-row">
+            <div class="chip">Next.js App Router</div>
+            <div class="chip">Supabase Postgres</div>
+            <div class="chip">Tailwind + shadcn/ui</div>
+            <div class="chip">Vercel Ready</div>
+          </div>
+        </div>
+        <div class="hero-panel">
+          <h2>作りたい世界観（最小構成）</h2>
+          <ul>
+            <li>チーム登録（国 / ホームスタジアム）</li>
+            <li>リーグ登録（勝ち点ルールをカスタム可能）</li>
+            <li>試合結果登録 → 順位表が自動更新</li>
+            <li>トーナメント作成と勝ち上がり管理</li>
+          </ul>
+        </div>
+      </header>
+
+      <section class="grid">
+        <article class="card">
+          <h3>MVPから拡張へ</h3>
+          <div class="split">
+            <div>
+              <h4>MVP</h4>
+              <ul>
+                <li>試合は手動追加 → 結果入力で成立</li>
+                <li>順位表 / ブラケットの自動更新</li>
+                <li>single elimination トーナメント</li>
+                <li>認証は後回し（任意）</li>
+              </ul>
+            </div>
+            <div>
+              <h4>拡張</h4>
+              <ul>
+                <li>総当たり日程の自動生成</li>
+                <li>ログイン + マルチユーザー</li>
+                <li>トーナメント強化（2leg / シード / 3決）</li>
+                <li>ヘッドトゥヘッド / PK勝ち点の多段切替</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>データ設計（エンティティ）</h3>
+          <div class="entity-grid">
+            <div class="entity">
+              <h4>Team</h4>
+              <ul>
+                <li><span class="tag">id</span> uuid</li>
+                <li><span class="tag">name</span> text</li>
+                <li><span class="tag">country</span> text</li>
+                <li><span class="tag">stadium_name</span> text</li>
+                <li><span class="tag">stadium_city</span> text (任意)</li>
+                <li><span class="tag">created_at</span> timestamp</li>
+              </ul>
+            </div>
+            <div class="entity">
+              <h4>League</h4>
+              <ul>
+                <li><span class="tag">id</span> uuid</li>
+                <li><span class="tag">name</span> text</li>
+                <li><span class="tag">season_label</span> text</li>
+                <li><span class="tag">country</span> text (任意)</li>
+                <li><span class="tag">point_rule</span> jsonb</li>
+                <li><span class="tag">created_at</span> timestamp</li>
+              </ul>
+            </div>
+            <div class="entity">
+              <h4>Match</h4>
+              <ul>
+                <li><span class="tag">competition_type</span> league / tournament</li>
+                <li><span class="tag">league_id</span> nullable</li>
+                <li><span class="tag">tournament_id</span> nullable</li>
+                <li><span class="tag">home_team_id</span> uuid</li>
+                <li><span class="tag">away_team_id</span> uuid</li>
+                <li><span class="tag">status</span> scheduled / played</li>
+                <li><span class="tag">score</span> home / away / pk</li>
+              </ul>
+            </div>
+            <div class="entity">
+              <h4>LeagueTeam</h4>
+              <ul>
+                <li><span class="tag">league_id</span> uuid</li>
+                <li><span class="tag">team_id</span> uuid</li>
+                <li><span class="tag">PK</span> composite key</li>
+              </ul>
+            </div>
+            <div class="entity">
+              <h4>Tournament</h4>
+              <ul>
+                <li><span class="tag">id</span> uuid</li>
+                <li><span class="tag">name</span> text</li>
+                <li><span class="tag">season_label</span> text</li>
+                <li><span class="tag">format</span> single_elim</li>
+                <li><span class="tag">created_at</span> timestamp</li>
+              </ul>
+            </div>
+            <div class="entity">
+              <h4>Rounds / Bracket</h4>
+              <ul>
+                <li><span class="tag">tournament_rounds</span> round_no</li>
+                <li><span class="tag">round_matches</span> match_id</li>
+                <li><span class="tag">簡易構成</span> round概念だけでOK</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>勝ち点ルール（JSON）</h3>
+          <div class="callout">
+            <div class="block">
+              <h4>基本ルール</h4>
+              <p>通常: 勝ち3 / 分け1 / 負け0</p>
+              <div class="list-inline">
+                <span class="pill">PK対応ON/OFF</span>
+                <span class="pill">PK勝ち点を変数化</span>
+              </div>
+            </div>
+            <div class="block">
+              <h4>PKありの例</h4>
+              <p>引き分け時はPK勝ち=2点 / PK負け=1点</p>
+            </div>
+          </div>
+          <div class="stack" style="margin-top: 16px;">
+            <pre>{
+  "regulation": { "win": 3, "draw": 1, "loss": 0 },
+  "pk": {
+    "enabled": true,
+    "draw_to_pk": true,
+    "pk_win_points": 2,
+    "pk_loss_points": 1
+  },
+  "tiebreakers": ["points", "goal_diff", "goals_for", "head_to_head"]
+}</pre>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>画面設計（最小で使える画面）</h3>
+          <div class="split">
+            <div>
+              <h4>リーグ</h4>
+              <ul>
+                <li>/leagues：一覧・作成</li>
+                <li>/leagues/[id]：参加チーム管理</li>
+                <li>試合一覧 / 結果入力フォーム</li>
+                <li>順位表の自動計算</li>
+              </ul>
+            </div>
+            <div>
+              <h4>トーナメント</h4>
+              <ul>
+                <li>/tournaments：一覧・作成</li>
+                <li>/tournaments/[id]：参加チーム</li>
+                <li>対戦カード生成（ランダム / シード）</li>
+                <li>結果入力・勝ち上がり表示</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>実装方針（MVP最短ルート）</h3>
+          <div class="split">
+            <div>
+              <h4>アーキテクチャ</h4>
+              <ul>
+                <li>Next.js App Router + TypeScript</li>
+                <li>server actions / route handlersでCRUD</li>
+                <li>Supabase clientをserver/clientで分離</li>
+              </ul>
+            </div>
+            <div>
+              <h4>品質</h4>
+              <ul>
+                <li>zodでバリデーション</li>
+                <li>エラー / 空状態 / ローディングの設計</li>
+                <li>順位計算・勝ち点計算は共通関数化</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>Codexプロンプト（貼るだけ）</h3>
+          <pre class="prompt">あなたはシニアフルスタックエンジニアです。
+Next.js(TypeScript) + Supabase(Postgres) + Tailwind(shadcn/ui) で、
+サッカーのリーグ順位表とトーナメント管理ができるWebアプリを実装してください。
+デプロイ先は Vercel を想定し、App Router を使ってください。
+
+# ゴール（MVP）
+- チーム登録（国、スタジアム）
+- リーグ登録（勝ち点ルールをカスタム可能。PKによる勝ち点ルールも対応）
+- リーグ参加チーム登録（リーグにチームを追加/削除）
+- 試合登録＆試合結果登録（リーグ用）
+- リーグ詳細で「順位表」「試合一覧」「結果入力フォーム」を同一画面に表示
+- トーナメント作成（single elimination）
+- トーナメント参加チーム登録、対戦カード生成、結果入力、勝ち上がり表示
+
+# 必須仕様
+## データモデル（Supabase / Postgres）
+- teams: id(uuid), name(text), country(text), stadium_name(text), created_at
+- leagues: id(uuid), name(text), season_label(text), point_rule(jsonb), created_at
+- league_teams: league_id(uuid FK), team_id(uuid FK), primary key(league_id, team_id)
+- matches:
+  - id(uuid), competition_type(text: 'league'|'tournament')
+  - league_id(uuid nullable), tournament_id(uuid nullable)
+  - home_team_id(uuid), away_team_id(uuid)
+  - kickoff_date(date nullable)
+  - status(text: 'scheduled'|'played')
+  - score_home(int nullable), score_away(int nullable)
+  - went_to_pk(boolean default false)
+  - pk_home(int nullable), pk_away(int nullable)
+  - created_at
+- tournaments: id(uuid), name(text), season_label(text), format(text: 'single_elim'), created_at
+- tournament_entries: tournament_id(uuid FK), team_id(uuid FK), primary key(tournament_id, team_id)
+- tournament_rounds (簡易でOK): id(uuid), tournament_id, round_no(int), created_at
+- tournament_round_matches: round_id, match_id (or round_noをmatchに持たせてもOK)
+
+## 勝ち点ルール（JSON）
+leagues.point_rule は以下を基本形にする：
+{
+  "regulation": {"win":3,"draw":1,"loss":0},
+  "pk": {"enabled":true, "draw_to_pk":true, "pk_win_points":2, "pk_loss_points":1},
+  "tiebreakers":["points","goal_diff","goals_for"]
+}
+- 計算ロジックは共通関数に切り出すこと
+- 引き分けでPKがある場合：90分は同点、PK勝ちがpk_win_points、PK負けがpk_loss_points
+- PKが無効なら通常の win/draw/loss を適用
+
+## 順位表の計算
+- 対象は league の played 試合のみ
+- 集計：試合数、勝、分、負、得点、失点、得失点差、勝ち点
+- ソート：tiebreakers の順（最低 points -> goal_diff -> goals_for）
+- ヘッドトゥヘッドはMVPでは不要（将来拡張しやすい構造にする）
+
+# UI（ページ）
+- /teams : チーム一覧、作成、編集、削除
+- /leagues : リーグ一覧、作成
+- /leagues/[id] :
+  - 参加チーム管理（追加/削除）
+  - 試合一覧（追加、結果編集）
+  - 順位表表示（自動計算）
+- /tournaments : トーナメント一覧、作成
+- /tournaments/[id] :
+  - 参加チーム管理
+  - 対戦カード生成（ランダムペアリング、余りは不戦勝）
+  - 結果入力
+  - ブラケット表示（シンプルでOK）
+
+# 実装方針
+- Next.js App Router
+- server actions または route handlers のどちらかに統一してCRUD
+- Supabase client を server / client で適切に分ける
+- バリデーション（zod）を使う
+- エラー表示、空状態、ローディングを用意
+- 可能なら seed データ投入スクリプトを用意
+
+# 成果物
+- リポジトリ構成を提示し、主要ファイルをすべて出力する
+- 重要関数：順位計算、勝ち点計算、トーナメント勝ち上がり計算は分かりやすいコメント付き
+- 最後に Vercel + Supabase のセットアップ手順を簡潔に書く
+
+まずはMVPを動く状態にして、そのあと拡張ポイント（ヘッドトゥヘッド、総当たり自動生成、
+複数シーズン、ユーザー認証）を提案してください。
+
+次に伸ばすなら、ここが分岐ポイント（どれを優先する？）
+
+質問はしないで提案ベースで言うと、優先順位はこのどれかになることが多い：
+
+**リーグの「日程自動生成（総当たり）」**をしたい
+
+ログインして自分のデータを保存（複数ユーザー）
+
+トーナメントを本格化（2leg、シード、3決など）
+
+PK勝ち点ルールを何パターンも切替したい（大会ごと）
+
+この中で、あなたが一番ワクワクするのどれ？
+（それに合わせて、Codexプロンプトを「その機能が最短で良くなる設計」に寄せて改良するよ）</pre>
+        </article>
+
+        <article class="card">
+          <h3>次の一手（優先度順）</h3>
+          <div class="split">
+            <div>
+              <h4>次の拡張ポイント</h4>
+              <ul>
+                <li>リーグ日程の自動生成（総当たり）</li>
+                <li>ログイン + マルチユーザー</li>
+                <li>トーナメント強化（2leg / シード / 3決）</li>
+                <li>PK勝ち点ルールの多段切替</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Vercel + Supabase セットアップ手順</h4>
+              <ul>
+                <li>Supabaseで新規プロジェクト作成</li>
+                <li>SQLでテーブル作成 + RLS設定</li>
+                <li>Vercelに環境変数（SUPABASE_URL / KEY）</li>
+                <li>デプロイ後に接続テスト</li>
+              </ul>
+            </div>
+          </div>
+          <p class="footer">
+            このドックをそのまま共有すれば、実装フェーズへの引き継ぎがスムーズです。
+          </p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
