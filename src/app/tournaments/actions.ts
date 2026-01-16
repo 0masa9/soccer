@@ -25,7 +25,7 @@ export async function createTournament(
   });
 
   if (!parsed.success) {
-    return { ok: false, message: parsed.error.errors[0]?.message };
+    return { ok: false, message: parsed.error.issues[0]?.message };
   }
 
   const supabase = await createSupabaseServerClient();
